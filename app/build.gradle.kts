@@ -56,6 +56,7 @@ dependencies {
     implementation ("io.coil-kt:coil-compose:2.4.0")
     implementation ("androidx.compose.material:material-icons-extended")
     implementation ("com.google.accompanist:accompanist-navigation-animation:0.36.0")
+    implementation("io.coil-kt.coil3:coil-compose:3.1.0")
     implementation("androidx.compose.foundation:foundation:1.7.5")
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.documentfile)

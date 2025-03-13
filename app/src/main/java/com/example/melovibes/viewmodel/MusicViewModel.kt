@@ -240,19 +240,27 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
 
     fun skipToNext() {
         val currentIndex = getCurrentPlaylistIndex()
-        if (currentIndex < getCurrentPlaylist().size - 1) {
-            playSong(getCurrentPlaylist()[currentIndex + 1])
+        val playlist = getCurrentPlaylist()
+
+        if (currentIndex < playlist.size - 1) {
+            playSong(playlist[currentIndex + 1])
         } else if (_repeatMode.value == 1) {
-            playSong(getCurrentPlaylist().first())
+            playSong(playlist.first()) // Loop back when repeat is ON
         }
     }
 
+
     fun skipToPrevious() {
         val currentIndex = getCurrentPlaylistIndex()
+        val playlist = getCurrentPlaylist()
+
         if (currentIndex > 0) {
-            playSong(getCurrentPlaylist()[currentIndex - 1])
+            playSong(playlist[currentIndex - 1])
+        } else if (_repeatMode.value == 1) {
+            playSong(playlist.last()) // Loop to the last song when repeat is ON
         }
     }
+
 
     private fun isLastSong(): Boolean {
         val currentIndex = getCurrentPlaylistIndex()
@@ -269,10 +277,20 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleShuffle() {
         _isShuffleOn.value = !_isShuffleOn.value
+
         if (_isShuffleOn.value) {
             shuffledPlaylist = originalPlaylist.shuffled()
+        } else {
+            shuffledPlaylist = originalPlaylist
+        }
+
+        // Ensure the current song stays in place
+        val current = _currentSong.value
+        if (current != null && _isShuffleOn.value) {
+            shuffledPlaylist = listOf(current) + shuffledPlaylist.filter { it != current }
         }
     }
+
 
     fun toggleRepeatMode() {
         _repeatMode.value = (_repeatMode.value + 1) % 3

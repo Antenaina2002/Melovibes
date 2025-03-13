@@ -25,10 +25,13 @@ fun MainScreen(viewModel: MusicViewModel) {
     val progress by viewModel.progress.collectAsState()
     val currentPosition by viewModel.currentPosition.collectAsState()
     val duration by viewModel.duration.collectAsState()
-    val isShuffleOn by viewModel.isShuffleOn.collectAsState()
+    val isShuffleOn by viewModel.isShuffleOn.collectAsState() // Observe shuffle state
     val repeatMode by viewModel.repeatMode.collectAsState()
-    val songs by viewModel.songs.collectAsState()
+    val songs by viewModel.songs.collectAsState() // List of all songs
     val playlists by viewModel.playlists.collectAsState()
+
+    // Handle shuffled songs
+    val shuffledSongs = if (isShuffleOn) songs.shuffled() else songs
 
     val context = LocalContext.current // Access context here
 
@@ -38,6 +41,7 @@ fun MainScreen(viewModel: MusicViewModel) {
                 if (currentSong != null) {
                     NowPlaying(
                         song = currentSong!!,
+                        songList = shuffledSongs, // Pass shuffled or original songs
                         isPlaying = isPlaying,
                         progress = progress,
                         currentPosition = currentPosition,
@@ -48,7 +52,7 @@ fun MainScreen(viewModel: MusicViewModel) {
                         onNext = { viewModel.skipToNext() },
                         onPrevious = { viewModel.skipToPrevious() },
                         onSeekTo = { viewModel.seekTo(it) },
-                        onShuffleClick = { viewModel.toggleShuffle() },
+                        onShuffleClick = { viewModel.toggleShuffle() }, // Toggle shuffle state in viewModel
                         onRepeatClick = { viewModel.toggleRepeatMode() }
                     )
                 }
@@ -102,3 +106,4 @@ fun MainScreen(viewModel: MusicViewModel) {
         }
     }
 }
+
