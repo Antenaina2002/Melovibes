@@ -2,7 +2,9 @@ package com.example.melovibes.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.animation.*
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -18,18 +20,24 @@ import com.example.melovibes.model.Song
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextAlign
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import okhttp3.internal.concurrent.formatDuration
+import androidx.compose.ui.text.TextStyle
 
 @Composable
 fun NowPlaying(
     song: Song,
-    songList: List<Song>, // Add this parameter
+    songList: List<Song>,
     isPlaying: Boolean,
     progress: Float,
     currentPosition: Long,
@@ -54,7 +62,7 @@ fun NowPlaying(
         shape = if (isFullScreen) RoundedCornerShape(0.dp) else RoundedCornerShape(24.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(height = animateDpAsState(if (isFullScreen) 550.dp else 72.dp).value) // Increased height
+            .height(height = animateDpAsState(if (isFullScreen) 550.dp else 72.dp).value)
             .clickable { toggleSize() }
             .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
@@ -90,9 +98,10 @@ fun NowPlaying(
                         Column(
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text(
+                            MarqueeText(
                                 text = song.title,
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.fillMaxWidth()
                             )
                             song.artist?.let {
                                 Text(
@@ -158,7 +167,7 @@ fun NowPlaying(
                         text = song.title,
                         style = MaterialTheme.typography.headlineMedium,
                         textAlign = TextAlign.Center,
-                        maxLines = 1,  // Prevents text from wrapping
+                        maxLines = 1,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -167,7 +176,7 @@ fun NowPlaying(
                             text = it,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                            maxLines = 1,  // Ensures artist name stays in a single line
+                            maxLines = 1,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 4.dp)
@@ -198,7 +207,7 @@ fun NowPlaying(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(
-                            onClick = onShuffleClick, // Trigger shuffle change
+                            onClick = onShuffleClick,
                             modifier = Modifier.size(48.dp)
                         ) {
                             Icon(
@@ -261,8 +270,76 @@ fun NowPlaying(
                             )
                         }
                     }
-
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun MarqueeText(
+    text: String,
+    style: TextStyle,
+    modifier: Modifier = Modifier
+) {
+    // State to track if the text overflows the available width
+    var textWidth by remember { mutableStateOf(0) }
+    var containerWidth by remember { mutableStateOf(0) }
+
+    // Determine if the text needs to scroll
+    val shouldScroll = textWidth > containerWidth
+
+    // Scroll state for the animation
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+
+    // Animation logic
+    LaunchedEffect(shouldScroll, scrollState.maxValue) {
+        if (shouldScroll) {
+            while (true) {
+                // Scroll to the end (left to right)
+                coroutineScope.launch {
+                    scrollState.animateScrollTo(
+                        textWidth, // Scroll to the full width of the text
+                        animationSpec = infiniteRepeatable(tween(20000)) // Slower animation (10 seconds)
+                    )
+                }
+                delay(9000) // Pause before restarting the scroll
+                // Reset scroll position to start
+                coroutineScope.launch {
+                    scrollState.scrollTo(0)
+                }
+                delay(2000) // Pause before restarting the scroll
+            }
+        }
+    }
+
+    // Measure the width of the text and the container
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .onSizeChanged { containerWidth = it.width }
+    ) {
+        Row(
+            modifier = Modifier
+                .horizontalScroll(scrollState, reverseScrolling = false) // Scroll left to right
+                .fillMaxWidth()
+        ) {
+            Text(
+                text = text,
+                style = style,
+                maxLines = 1,
+                modifier = Modifier
+                    .padding(end = if (shouldScroll) 16.dp else 0.dp) // Add spacing only if scrolling
+                    .onSizeChanged { textWidth = it.width }
+            )
+            if (shouldScroll) {
+                Text(
+                    text = text,
+                    style = style,
+                    maxLines = 1,
+                    modifier = Modifier.padding(end = 16.dp)
+                )
             }
         }
     }
