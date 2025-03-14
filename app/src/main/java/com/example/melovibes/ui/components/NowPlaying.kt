@@ -102,10 +102,28 @@ fun NowPlaying(
                             }
                         }
                     }
+
+                    // Add Previous Button
+                    IconButton(onClick = onPrevious) {
+                        Icon(
+                            imageVector = Icons.Filled.SkipPrevious,
+                            contentDescription = "Previous"
+                        )
+                    }
+
+                    // Play/Pause Button
                     IconButton(onClick = { onPlayPause() }) {
                         Icon(
                             imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                             contentDescription = "Play/Pause"
+                        )
+                    }
+
+                    // Add Next Button
+                    IconButton(onClick = onNext) {
+                        Icon(
+                            imageVector = Icons.Filled.SkipNext,
+                            contentDescription = "Next"
                         )
                     }
                 }
