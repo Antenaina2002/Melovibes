@@ -19,21 +19,26 @@ fun MainScreen(viewModel: MusicViewModel) {
     var selectedTab by remember { mutableStateOf(0) }
     var selectedPlaylist by remember { mutableStateOf<Playlist?>(null) }
 
-    // Observe StateFlow properties using collectAsState()
     val currentSong by viewModel.currentSong.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val progress by viewModel.progress.collectAsState()
     val currentPosition by viewModel.currentPosition.collectAsState()
     val duration by viewModel.duration.collectAsState()
-    val isShuffleOn by viewModel.isShuffleOn.collectAsState() // Observe shuffle state
+    val isShuffleOn by viewModel.isShuffleOn.collectAsState()
     val repeatMode by viewModel.repeatMode.collectAsState()
-    val songs by viewModel.songs.collectAsState() // List of all songs
+    val songs by viewModel.songs.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
 
-    // Handle shuffled songs
     val shuffledSongs = if (isShuffleOn) songs.shuffled() else songs
+    val context = LocalContext.current
 
-    val context = LocalContext.current // Access context here
+    val onImageChange = {
+        // Logic to pick or change the image, e.g., opening an image picker
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            type = "image/*"
+        }
+        context.startActivity(intent)
+    }
 
     Scaffold(
         bottomBar = {
@@ -41,7 +46,7 @@ fun MainScreen(viewModel: MusicViewModel) {
                 if (currentSong != null) {
                     NowPlaying(
                         song = currentSong!!,
-                        songList = shuffledSongs, // Pass shuffled or original songs
+                        songList = shuffledSongs,
                         isPlaying = isPlaying,
                         progress = progress,
                         currentPosition = currentPosition,
@@ -52,8 +57,9 @@ fun MainScreen(viewModel: MusicViewModel) {
                         onNext = { viewModel.skipToNext() },
                         onPrevious = { viewModel.skipToPrevious() },
                         onSeekTo = { viewModel.seekTo(it) },
-                        onShuffleClick = { viewModel.toggleShuffle() }, // Toggle shuffle state in viewModel
-                        onRepeatClick = { viewModel.toggleRepeatMode() }
+                        onShuffleClick = { viewModel.toggleShuffle() },
+                        onRepeatClick = { viewModel.toggleRepeatMode() },
+                        onImageChange = onImageChange // Pass the onImageChange function here
                     )
                 }
                 BottomNavigationBar(

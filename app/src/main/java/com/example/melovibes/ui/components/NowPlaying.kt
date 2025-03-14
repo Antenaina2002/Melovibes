@@ -1,5 +1,6 @@
 package com.example.melovibes.ui.components
 
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.animation.*
 import androidx.compose.animation.core.LinearEasing
@@ -18,6 +19,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.melovibes.model.Song
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -28,11 +30,16 @@ import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.internal.concurrent.formatDuration
 import androidx.compose.ui.text.TextStyle
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil3.Uri
+import com.example.melovibes.R
 
 @Composable
 fun NowPlaying(
@@ -49,7 +56,8 @@ fun NowPlaying(
     onPrevious: () -> Unit,
     onSeekTo: (Float) -> Unit,
     onShuffleClick: () -> Unit,
-    onRepeatClick: () -> Unit
+    onRepeatClick: () -> Unit,
+    onImageChange: () -> Unit // Added callback for changing album art
 ) {
     var isFullScreen by remember { mutableStateOf(false) }
 
@@ -84,17 +92,40 @@ fun NowPlaying(
                         modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(song.albumArtUri)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = "Album Art",
+                        // Song cover or default music note icon
+                        Box(
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop
-                        )
+                                .size(48.dp) // Placeholder size
+                                .clip(RoundedCornerShape(12.dp)) // Rounded corners for the placeholder
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            val painter = rememberAsyncImagePainter(
+                                model = song.albumArtUri
+                            )
+
+                            val imageState = painter.state
+                            Image(
+                                painter = painter,
+                                contentDescription = "Album Art",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(12.dp)), // Ensure image fits in the rounded box
+                                contentScale = ContentScale.Crop
+                            )
+
+                            // Handle errors and show a fallback music note icon
+                            if (imageState is AsyncImagePainter.State.Error) {
+                                Icon(
+                                    imageVector = Icons.Filled.MusicNote,
+                                    contentDescription = "Default Music Note",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .align(Alignment.Center),
+                                    tint = Color.Gray
+                                )
+                            }
+                        }
+
                         Column(
                             modifier = Modifier.weight(1f)
                         ) {
@@ -148,18 +179,52 @@ fun NowPlaying(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Large Album Art
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(song.albumArtUri)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "Album Art",
+                    // Large Album Art or Default Music Note Icon
+                    Box(
                         modifier = Modifier
-                            .size(250.dp)
-                            .clip(RoundedCornerShape(16.dp)),
-                        contentScale = ContentScale.Crop
-                    )
+                            .size(250.dp) // Adjust size of the placeholder
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        val painter = rememberAsyncImagePainter(
+                            model = song.albumArtUri
+                        )
+
+                        val imageState = painter.state
+                        Image(
+                            painter = painter,
+                            contentDescription = "Album Art",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(16.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        // Handle errors and show a fallback music note icon
+                        if (imageState is AsyncImagePainter.State.Error) {
+                            Icon(
+                                imageVector = Icons.Filled.MusicNote,
+                                contentDescription = "Default Music Note",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .align(Alignment.Center),
+                                tint = Color.Gray
+                            )
+                        }
+
+                        // IconButton to change album art, placed on top of the image
+                        IconButton(
+                            onClick = onImageChange,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd) // Positioned at the top-right corner
+                                .padding(8.dp) // Padding to avoid overlap
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit, // Edit icon to change image
+                                contentDescription = "Change Album Art"
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 

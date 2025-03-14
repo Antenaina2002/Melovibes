@@ -58,6 +58,9 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
     val playlists: StateFlow<List<Playlist>> get() = _playlists
 
+    private val _isFullScreen = mutableStateOf(false)
+    val isFullScreen: State<Boolean> = _isFullScreen
+
 
     private var exoPlayer: ExoPlayer? = null
     private var mediaSession: MediaSession? = null
@@ -259,6 +262,10 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
         } else if (_repeatMode.value == 1) {
             playSong(playlist.last()) // Loop to the last song when repeat is ON
         }
+    }
+
+    fun setFullScreen(isFullScreen: Boolean) {
+        _isFullScreen.value = isFullScreen
     }
 
 
