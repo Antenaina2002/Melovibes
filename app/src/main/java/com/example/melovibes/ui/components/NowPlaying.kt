@@ -1,8 +1,11 @@
 package com.example.melovibes.ui.components
 
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.animation.*
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,20 +19,32 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.melovibes.model.Song
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import okhttp3.internal.concurrent.formatDuration
+import androidx.compose.ui.text.TextStyle
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil3.Uri
+import com.example.melovibes.R
 
 @Composable
 fun NowPlaying(
     song: Song,
-    songList: List<Song>, // Add this parameter
+    songList: List<Song>,
     isPlaying: Boolean,
     progress: Float,
     currentPosition: Long,
@@ -41,7 +56,8 @@ fun NowPlaying(
     onPrevious: () -> Unit,
     onSeekTo: (Float) -> Unit,
     onShuffleClick: () -> Unit,
-    onRepeatClick: () -> Unit
+    onRepeatClick: () -> Unit,
+    onImageChange: () -> Unit // Added callback for changing album art
 ) {
     var isFullScreen by remember { mutableStateOf(false) }
 
@@ -54,7 +70,7 @@ fun NowPlaying(
         shape = if (isFullScreen) RoundedCornerShape(0.dp) else RoundedCornerShape(24.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(height = animateDpAsState(if (isFullScreen) 550.dp else 72.dp).value) // Increased height
+            .height(height = animateDpAsState(if (isFullScreen) 550.dp else 72.dp).value)
             .clickable { toggleSize() }
             .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
@@ -76,23 +92,47 @@ fun NowPlaying(
                         modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(song.albumArtUri)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = "Album Art",
+                        // Song cover or default music note icon
+                        Box(
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop
-                        )
+                                .size(48.dp) // Placeholder size
+                                .clip(RoundedCornerShape(12.dp)) // Rounded corners for the placeholder
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            val painter = rememberAsyncImagePainter(
+                                model = song.albumArtUri
+                            )
+
+                            val imageState = painter.state
+                            Image(
+                                painter = painter,
+                                contentDescription = "Album Art",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(12.dp)), // Ensure image fits in the rounded box
+                                contentScale = ContentScale.Crop
+                            )
+
+                            // Handle errors and show a fallback music note icon
+                            if (imageState is AsyncImagePainter.State.Error) {
+                                Icon(
+                                    imageVector = Icons.Filled.MusicNote,
+                                    contentDescription = "Default Music Note",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .align(Alignment.Center),
+                                    tint = Color.Gray
+                                )
+                            }
+                        }
+
                         Column(
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text(
+                            MarqueeText(
                                 text = song.title,
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.fillMaxWidth()
                             )
                             song.artist?.let {
                                 Text(
@@ -102,10 +142,28 @@ fun NowPlaying(
                             }
                         }
                     }
+
+                    // Add Previous Button
+                    IconButton(onClick = onPrevious) {
+                        Icon(
+                            imageVector = Icons.Filled.SkipPrevious,
+                            contentDescription = "Previous"
+                        )
+                    }
+
+                    // Play/Pause Button
                     IconButton(onClick = { onPlayPause() }) {
                         Icon(
                             imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                             contentDescription = "Play/Pause"
+                        )
+                    }
+
+                    // Add Next Button
+                    IconButton(onClick = onNext) {
+                        Icon(
+                            imageVector = Icons.Filled.SkipNext,
+                            contentDescription = "Next"
                         )
                     }
                 }
@@ -121,18 +179,52 @@ fun NowPlaying(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Large Album Art
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(song.albumArtUri)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "Album Art",
+                    // Large Album Art or Default Music Note Icon
+                    Box(
                         modifier = Modifier
-                            .size(250.dp)
-                            .clip(RoundedCornerShape(16.dp)),
-                        contentScale = ContentScale.Crop
-                    )
+                            .size(250.dp) // Adjust size of the placeholder
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        val painter = rememberAsyncImagePainter(
+                            model = song.albumArtUri
+                        )
+
+                        val imageState = painter.state
+                        Image(
+                            painter = painter,
+                            contentDescription = "Album Art",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(16.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        // Handle errors and show a fallback music note icon
+                        if (imageState is AsyncImagePainter.State.Error) {
+                            Icon(
+                                imageVector = Icons.Filled.MusicNote,
+                                contentDescription = "Default Music Note",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .align(Alignment.Center),
+                                tint = Color.Gray
+                            )
+                        }
+
+                        // IconButton to change album art, placed on top of the image
+                        IconButton(
+                            onClick = onImageChange,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd) // Positioned at the top-right corner
+                                .padding(8.dp) // Padding to avoid overlap
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit, // Edit icon to change image
+                                contentDescription = "Change Album Art"
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -140,7 +232,7 @@ fun NowPlaying(
                         text = song.title,
                         style = MaterialTheme.typography.headlineMedium,
                         textAlign = TextAlign.Center,
-                        maxLines = 1,  // Prevents text from wrapping
+                        maxLines = 1,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -149,7 +241,7 @@ fun NowPlaying(
                             text = it,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                            maxLines = 1,  // Ensures artist name stays in a single line
+                            maxLines = 1,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 4.dp)
@@ -180,7 +272,7 @@ fun NowPlaying(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(
-                            onClick = onShuffleClick, // Trigger shuffle change
+                            onClick = onShuffleClick,
                             modifier = Modifier.size(48.dp)
                         ) {
                             Icon(
@@ -243,8 +335,76 @@ fun NowPlaying(
                             )
                         }
                     }
-
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun MarqueeText(
+    text: String,
+    style: TextStyle,
+    modifier: Modifier = Modifier
+) {
+    // State to track if the text overflows the available width
+    var textWidth by remember { mutableStateOf(0) }
+    var containerWidth by remember { mutableStateOf(0) }
+
+    // Determine if the text needs to scroll
+    val shouldScroll = textWidth > containerWidth
+
+    // Scroll state for the animation
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+
+    // Animation logic
+    LaunchedEffect(shouldScroll, scrollState.maxValue) {
+        if (shouldScroll) {
+            while (true) {
+                // Scroll to the end (left to right)
+                coroutineScope.launch {
+                    scrollState.animateScrollTo(
+                        textWidth, // Scroll to the full width of the text
+                        animationSpec = infiniteRepeatable(tween(20000)) // Slower animation (10 seconds)
+                    )
+                }
+                delay(9000) // Pause before restarting the scroll
+                // Reset scroll position to start
+                coroutineScope.launch {
+                    scrollState.scrollTo(0)
+                }
+                delay(2000) // Pause before restarting the scroll
+            }
+        }
+    }
+
+    // Measure the width of the text and the container
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .onSizeChanged { containerWidth = it.width }
+    ) {
+        Row(
+            modifier = Modifier
+                .horizontalScroll(scrollState, reverseScrolling = false) // Scroll left to right
+                .fillMaxWidth()
+        ) {
+            Text(
+                text = text,
+                style = style,
+                maxLines = 1,
+                modifier = Modifier
+                    .padding(end = if (shouldScroll) 16.dp else 0.dp) // Add spacing only if scrolling
+                    .onSizeChanged { textWidth = it.width }
+            )
+            if (shouldScroll) {
+                Text(
+                    text = text,
+                    style = style,
+                    maxLines = 1,
+                    modifier = Modifier.padding(end = 16.dp)
+                )
             }
         }
     }
