@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import androidx.documentfile.provider.DocumentFile
+import com.example.melovibes.repository.PlaylistRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -60,6 +61,8 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
     val playlists: StateFlow<List<Playlist>> get() = _playlists
 
+    private val playlistRepository = PlaylistRepository(application)
+
     private val _isFullScreen = mutableStateOf(false)
     val isFullScreen: State<Boolean> = _isFullScreen
 
@@ -82,6 +85,7 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
         setupPlayer()
         createNotificationChannel()
         loadSongs()
+        _playlists.value = playlistRepository.loadPlaylists()
     }
 
     private fun setupPlayer() {
@@ -322,7 +326,12 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
             id = UUID.randomUUID().toString(), // Generate a unique String ID
             name = name
         )
-        _playlists.value = _playlists.value + newPlaylist
+        // Add the new playlist to the current list of playlists
+        val updatedPlaylists = _playlists.value + newPlaylist
+        _playlists.value = updatedPlaylists
+
+        // Save updated playlists to SharedPreferences
+        playlistRepository.savePlaylists(updatedPlaylists)
     }
 
     fun addSongToPlaylist(playlist: Playlist, songs: List<Song>) {
@@ -340,7 +349,12 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun removePlaylist(playlist: Playlist) {
-        _playlists.value = _playlists.value.filter { it.id != playlist.id }
+        // Remove the playlist from the list
+        val updatedPlaylists = _playlists.value.filter { it.id != playlist.id }
+        _playlists.value = updatedPlaylists
+
+        // Save the updated list of playlists to SharedPreferences
+        playlistRepository.savePlaylists(updatedPlaylists)
     }
 
     // Function to set a playlist cover

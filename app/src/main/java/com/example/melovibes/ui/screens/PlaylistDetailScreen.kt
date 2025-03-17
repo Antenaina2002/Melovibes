@@ -53,6 +53,7 @@ fun PlaylistDetailScreen(
                     }
                 },
                 actions = {
+                    // Delete playlist button in the top app bar
                     IconButton(onClick = { showDeleteConfirmation = true }) {
                         Icon(Icons.Default.Delete, "Delete Playlist")
                     }
