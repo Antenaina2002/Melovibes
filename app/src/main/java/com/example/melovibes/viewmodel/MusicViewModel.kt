@@ -336,10 +336,13 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addSongToPlaylist(playlist: Playlist, songs: List<Song>) {
         val updatedPlaylist = playlist.copy(songs = playlist.songs + songs)
+
         _playlists.value = _playlists.value.map {
             if (it.id == playlist.id) updatedPlaylist else it
         }
+        playlistRepository.savePlaylists(_playlists.value)
     }
+
 
     fun removeSongFromPlaylist(playlist: Playlist, song: Song) {
         val updatedPlaylist = playlist.copy(songs = playlist.songs - song)
