@@ -343,14 +343,6 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
         playlistRepository.savePlaylists(_playlists.value)
     }
 
-
-    fun removeSongFromPlaylist(playlist: Playlist, song: Song) {
-        val updatedPlaylist = playlist.copy(songs = playlist.songs - song)
-        _playlists.value = _playlists.value.map {
-            if (it.id == playlist.id) updatedPlaylist else it
-        }
-    }
-
     fun removePlaylist(playlist: Playlist) {
         // Remove the playlist from the list
         val updatedPlaylists = _playlists.value.filter { it.id != playlist.id }
@@ -437,12 +429,16 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun removeSongsFromPlaylist(playlist: Playlist, songsToRemove: List<Song>) {
-        viewModelScope.launch {
-            val updatedSongs = playlist.songs.filterNot { it in songsToRemove }
-            val updatedPlaylist = playlist.copy(songs = updatedSongs)
-            _playlists.value = _playlists.value.map { if (it.id == playlist.id) updatedPlaylist else it }
+        val updatedSongs = playlist.songs.filterNot { song -> songsToRemove.contains(song) }
+        val updatedPlaylist = playlist.copy(songs = updatedSongs)
+
+        _playlists.value = _playlists.value.map {
+            if (it.id == playlist.id) updatedPlaylist else it
         }
+
+        playlistRepository.savePlaylists(_playlists.value)
     }
+
 
     fun toggleSelection(song: Song) {
         _selectedSongs.value = if (_selectedSongs.value.contains(song)) {
