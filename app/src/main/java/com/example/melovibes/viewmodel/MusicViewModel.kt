@@ -72,6 +72,7 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
     private val _isSelectionMode = MutableStateFlow(false)
     val isSelectionMode: StateFlow<Boolean> = _isSelectionMode
 
+
     private var exoPlayer: ExoPlayer? = null
     private var mediaSession: MediaSession? = null
     private var originalPlaylist: List<Song> = emptyList()

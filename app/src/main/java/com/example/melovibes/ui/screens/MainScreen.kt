@@ -40,11 +40,9 @@ fun MainScreen(viewModel: MusicViewModel) {
         }
         context.startActivity(intent)
     }
-
     val onPlaySongClick: (Song) -> Unit = { song ->
         viewModel.playSong(song) // Call the play song function from your viewModel
     }
-
     Scaffold(
         bottomBar = {
             Column {
@@ -103,16 +101,13 @@ fun MainScreen(viewModel: MusicViewModel) {
                             viewModel.addSongToPlaylist(targetPlaylist, selectedSongs)
                         }
                     )
-                    1 -> Text("Albums")
-                    2 -> Text("Artists")
-                    3 -> PlaylistScreen(
+=                    3 -> PlaylistScreen(
                         viewModel = viewModel,
                         onPlaylistClick = { selectedPlaylist = it },
                         onImageSelected = { playlist, uri ->
                             viewModel.setPlaylistCover(playlist.id, uri)
                         }
                     )
-                    4 -> Text("Favorites")
                 }
             }
         }

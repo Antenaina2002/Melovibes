@@ -59,6 +59,7 @@ fun NowPlaying(
     onRepeatClick: () -> Unit,
     onImageChange: () -> Unit,
     formatDuration: (Long) -> String
+    onImageChange: () -> Unit // Added callback for changing album art
 ) {
     var isFullScreen by remember { mutableStateOf(false) }
 
@@ -183,6 +184,7 @@ fun NowPlaying(
                     Box(
                         modifier = Modifier
                             .size(250.dp)
+                            .size(250.dp) // Adjust size of the placeholder
                             .clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                     ) {
@@ -345,7 +347,6 @@ fun NowPlaying(
         }
     }
 }
-
 @Composable
 fun MarqueeText(
     text: String,
@@ -355,6 +356,7 @@ fun MarqueeText(
     // State to track if the text overflows the available width
     var textWidth by remember { mutableStateOf(0) }
     var containerWidth by remember { mutableStateOf(0) }
+
 
     // Determine if the text needs to scroll
     val shouldScroll = textWidth > containerWidth
