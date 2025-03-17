@@ -49,8 +49,17 @@ fun MusicList(
     fun onToggleSelection(song: Song) {
         if (selectedSongs.contains(song)) {
             selectedSongs.remove(song)
+            
+            // Disable selection mode if no songs are selected
+            if (selectedSongs.isEmpty()) {
+                viewModel.disableSelectionMode()
+            }
         } else {
             selectedSongs.add(song)
+            // Enable selection mode if at least one song is selected
+            if (!isSelectionMode) {
+                viewModel.enableSelectionMode()
+            }
         }
     }
 

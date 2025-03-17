@@ -57,8 +57,7 @@ fun NowPlaying(
     onSeekTo: (Float) -> Unit,
     onShuffleClick: () -> Unit,
     onRepeatClick: () -> Unit,
-    onImageChange: () -> Unit,
-    formatDuration: (Long) -> String
+    formatDuration: (Long) -> String,
     onImageChange: () -> Unit // Added callback for changing album art
 ) {
     var isFullScreen by remember { mutableStateOf(false) }

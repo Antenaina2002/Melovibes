@@ -101,7 +101,7 @@ fun MainScreen(viewModel: MusicViewModel) {
                             viewModel.addSongToPlaylist(targetPlaylist, selectedSongs)
                         }
                     )
-=                    3 -> PlaylistScreen(
+                    3 -> PlaylistScreen(
                         viewModel = viewModel,
                         onPlaylistClick = { selectedPlaylist = it },
                         onImageSelected = { playlist, uri ->
