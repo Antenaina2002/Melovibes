@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.melovibes.model.Playlist
 import com.example.melovibes.ui.screens.PlaylistItem
@@ -33,25 +34,51 @@ fun PlaylistScreen(
     var playlistToEdit by remember { mutableStateOf<Playlist?>(null) }
 
     val context = LocalContext.current // Access context here
+    val playlists by viewModel.playlists.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Use LazyVerticalGrid to display playlists in a grid
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2), // Display 2 items per row
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(viewModel.playlists.value) { playlist ->
-                    PlaylistItem(
-                        playlist = playlist,
-                        coverUri = viewModel.playlistCovers[playlist.id], // Get cover URI from ViewModel
-                        onPlaylistClick = { onPlaylistClick(playlist) },
-                        onDeleteClick = { playlistToDelete = playlist },
-                        onEditCoverClick = { playlistToEdit = playlist }
-                    )
+            if (playlists.isNotEmpty()) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2), // Display 2 items per row
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(playlists) { playlist ->
+                        PlaylistItem(
+                            playlist = playlist,
+                            coverUri = viewModel.playlistCovers[playlist.id], // Get cover URI from ViewModel
+                            onPlaylistClick = { onPlaylistClick(playlist) },
+                            onDeleteClick = { playlistToDelete = playlist },
+                            onEditCoverClick = { playlistToEdit = playlist }
+                        )
+                    }
+                }
+            } else {
+                // Show centered message if there are no playlists
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "¯\\_(ツ)_/¯",
+                            style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = "no playlist yet",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
         }

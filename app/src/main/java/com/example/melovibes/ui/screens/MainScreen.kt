@@ -109,7 +109,6 @@ fun MainScreen(viewModel: MusicViewModel) {
                         viewModel = viewModel,
                         onPlaylistClick = { selectedPlaylist = it },
                         onImageSelected = { playlist, uri ->
-                            // Handle the selected image URI for the playlist
                             viewModel.setPlaylistCover(playlist.id, uri)
                         }
                     )
