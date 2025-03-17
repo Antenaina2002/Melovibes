@@ -1,5 +1,6 @@
 package com.example.melovibes.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Checkbox
@@ -12,45 +13,59 @@ import com.example.melovibes.model.Song
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SongItem(
     song: Song,
-    isSelected: Boolean, // Whether the song is selected
-    onClick: () -> Unit, // Callback when the song is clicked
-    onToggleSelection: () -> Unit // Callback when the selection is toggled
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onLongPress: () -> Unit,
+    onToggleSelection: () -> Unit,
+    onMoreOptionsClick: () -> Unit, // This is required for the dots button
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(8.dp),
+            .padding(8.dp)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongPress
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Checkbox for selection
-        Checkbox(
-            checked = isSelected,
-            onCheckedChange = { isChecked -> onToggleSelection() } // Forcer la mise à jour
-        )
-
-        // Song details
-        Column(
-            modifier = Modifier
-                .weight(1f) // Make the column take up the remaining space
-                .padding(start = 8.dp)
-        ) {
-            Text(
-                text = song.title,
-                style = MaterialTheme.typography.bodyLarge
+        if (isSelected) {
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = { onToggleSelection() }
             )
-            song.artist?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-            }
+        }
+
+        Column(
+            modifier = Modifier.weight(1f).padding(start = 8.dp)
+        ) {
+            Text(song.title, fontWeight = FontWeight.Bold)
+            Text(song.artist ?: "Unknown Artist", fontSize = 14.sp, color = Color.Gray)
+        }
+
+        IconButton(onClick = onMoreOptionsClick) {
+            Icon(Icons.Default.MoreVert, contentDescription = "More Options")
         }
     }
 }

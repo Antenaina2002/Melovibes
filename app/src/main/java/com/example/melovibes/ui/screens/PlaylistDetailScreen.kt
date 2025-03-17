@@ -1,6 +1,7 @@
 package com.example.musicplayer.ui.screens
 
 import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,14 +32,14 @@ fun PlaylistDetailScreen(
     playlist: Playlist,
     viewModel: MusicViewModel,
     onBackClick: () -> Unit,
+    onPlaySongClick: (Song) -> Unit, // Callback to play the song
     onAddSongsClick: () -> Unit // Callback to open the MusicList for adding songs
 ) {
     var showDeleteConfirmation by remember { mutableStateOf(false) }
-    var showEditCoverDialog by remember { mutableStateOf(false) }
     var showAddSongsDialog by remember { mutableStateOf(false) }
-    var showRemoveSongsDialog by remember { mutableStateOf(false) } // State for removing songs
+    var showRemoveSongsDialog by remember { mutableStateOf(false) }
     val selectedSongs = remember { mutableStateListOf<Song>() }
-    val addDialogSelectedSongs = remember { mutableStateListOf<Song>() } // Separate list for add dialog
+    val addDialogSelectedSongs = remember { mutableStateListOf<Song>() }
     val playlists by viewModel.playlists.collectAsState()
     val currentPlaylist = playlists.find { it.id == playlist.id } ?: playlist
 
@@ -64,14 +65,33 @@ fun PlaylistDetailScreen(
                         SongItem(
                             song = song,
                             isSelected = selectedSongs.contains(song),
-                            onClick = { viewModel.playSong(song) },
+                            onClick = {
+                                if (selectedSongs.isEmpty()) {
+                                    onPlaySongClick(song)
+                                } else {
+                                    if (selectedSongs.contains(song)) {
+                                        selectedSongs.remove(song)
+                                    } else {
+                                        selectedSongs.add(song)
+                                    }
+                                }
+                            },
+                            onLongPress = {
+                                if (!selectedSongs.contains(song)) {
+                                    selectedSongs.add(song)
+                                }
+                            },
                             onToggleSelection = {
                                 if (selectedSongs.contains(song)) {
                                     selectedSongs.remove(song)
                                 } else {
                                     selectedSongs.add(song)
                                 }
-                            }
+                            },
+                            onMoreOptionsClick = {
+                                showAddSongsDialog = true
+                            },
+                            modifier = Modifier.fillMaxWidth()
                         )
                         HorizontalDivider()
                     }
@@ -88,6 +108,7 @@ fun PlaylistDetailScreen(
             }
         }
 
+        // Floating Action Buttons (FAB)
         if (selectedSongs.isNotEmpty()) {
             FloatingActionButton(
                 onClick = { showRemoveSongsDialog = true },
@@ -105,12 +126,12 @@ fun PlaylistDetailScreen(
         }
     }
 
+    // Show the Add Songs Dialog
     if (showAddSongsDialog) {
         val context = LocalContext.current
         val snackbarHostState = remember { SnackbarHostState() }
         var showDuplicateWarning by remember { mutableStateOf(false) }
 
-        // Use Box to layer Snackbar at the bottom of the screen
         Box {
             Dialog(onDismissRequest = { showAddSongsDialog = false }) {
                 Surface(
@@ -123,18 +144,25 @@ fun PlaylistDetailScreen(
 
                         LazyColumn(modifier = Modifier.height(400.dp)) {
                             items(viewModel.songs.value) { song ->
-                                SongItem(
-                                    song = song,
-                                    isSelected = addDialogSelectedSongs.contains(song),
-                                    onClick = {},
-                                    onToggleSelection = {
-                                        if (addDialogSelectedSongs.contains(song)) {
-                                            addDialogSelectedSongs.remove(song)
-                                        } else {
-                                            addDialogSelectedSongs.add(song)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = addDialogSelectedSongs.contains(song),
+                                        onCheckedChange = { isChecked ->
+                                            if (isChecked) {
+                                                addDialogSelectedSongs.add(song)
+                                            } else {
+                                                addDialogSelectedSongs.remove(song)
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                    Text(
+                                        text = song.title,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+                                }
                                 HorizontalDivider()
                             }
                         }
@@ -181,7 +209,7 @@ fun PlaylistDetailScreen(
         }
     }
 
-
+    // Show Remove Songs Dialog
     if (showRemoveSongsDialog) {
         Dialog(onDismissRequest = { showRemoveSongsDialog = false }) {
             Surface(
@@ -216,6 +244,7 @@ fun PlaylistDetailScreen(
         }
     }
 
+    // Delete Playlist Confirmation
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },

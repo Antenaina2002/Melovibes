@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.melovibes.model.Playlist
+import com.example.melovibes.model.Song
 import com.example.melovibes.ui.components.BottomNavigationBar
 import com.example.melovibes.ui.components.MusicList
 import com.example.melovibes.ui.components.NowPlaying
@@ -38,6 +39,10 @@ fun MainScreen(viewModel: MusicViewModel) {
             type = "image/*"
         }
         context.startActivity(intent)
+    }
+
+    val onPlaySongClick: (Song) -> Unit = { song ->
+        viewModel.playSong(song) // Call the play song function from your viewModel
     }
 
     Scaffold(
@@ -80,6 +85,7 @@ fun MainScreen(viewModel: MusicViewModel) {
                         playlist = selectedPlaylist!!,
                         viewModel = viewModel,
                         onBackClick = { selectedPlaylist = null },
+                        onPlaySongClick = onPlaySongClick, // Pass the onPlaySongClick function here
                         onAddSongsClick = {
                             // Open the MusicList for adding songs
                             selectedTab = 0 // Switch to the MusicList tab
@@ -112,4 +118,3 @@ fun MainScreen(viewModel: MusicViewModel) {
         }
     }
 }
-

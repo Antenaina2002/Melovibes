@@ -11,9 +11,11 @@ import android.os.Build
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -61,6 +63,11 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
     private val _isFullScreen = mutableStateOf(false)
     val isFullScreen: State<Boolean> = _isFullScreen
 
+    private val _selectedSongs = MutableStateFlow<List<Song>>(emptyList())
+    val selectedSongs: StateFlow<List<Song>> = _selectedSongs
+
+    private val _isSelectionMode = MutableStateFlow(false)
+    val isSelectionMode: StateFlow<Boolean> = _isSelectionMode
 
     private var exoPlayer: ExoPlayer? = null
     private var mediaSession: MediaSession? = null
@@ -380,8 +387,11 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun deleteSongs(songs: List<Song>) {
-        _songs.value = _songs.value.filter { it !in songs }
+    fun deleteSongs(songsToDelete: List<Song>) {
+        Log.d("MusicViewModel", "Deleting songs: $songsToDelete")
+        _songs.value = _songs.value - songsToDelete.toSet()
+        _selectedSongs.value = emptyList()
+        _isSelectionMode.value = false
     }
 
     fun setAsRingtone(song: Song?) {
@@ -417,8 +427,23 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun toggleSelection(song: Song) {
+        _selectedSongs.value = if (_selectedSongs.value.contains(song)) {
+            _selectedSongs.value - song
+        } else {
+            _selectedSongs.value + song
+        }
+        _isSelectionMode.value = _selectedSongs.value.isNotEmpty()
+    }
 
+    fun enableSelectionMode() {
+        _isSelectionMode.value = true
+    }
 
+    fun disableSelectionMode() {
+        _isSelectionMode.value = false
+        _selectedSongs.value = emptyList()
+    }
 
     override fun onCleared() {
         super.onCleared()
