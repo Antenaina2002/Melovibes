@@ -49,6 +49,7 @@ fun MusicList(
     fun onToggleSelection(song: Song) {
         if (selectedSongs.contains(song)) {
             selectedSongs.remove(song)
+            
             // Disable selection mode if no songs are selected
             if (selectedSongs.isEmpty()) {
                 viewModel.disableSelectionMode()
