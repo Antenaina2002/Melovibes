@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.melovibes.model.Playlist
+import com.example.melovibes.model.Song
 import com.example.melovibes.ui.components.BottomNavigationBar
 import com.example.melovibes.ui.components.MusicList
 import com.example.melovibes.ui.components.NowPlaying
@@ -39,7 +40,9 @@ fun MainScreen(viewModel: MusicViewModel) {
         }
         context.startActivity(intent)
     }
-
+    val onPlaySongClick: (Song) -> Unit = { song ->
+        viewModel.playSong(song) // Call the play song function from your viewModel
+    }
     Scaffold(
         bottomBar = {
             Column {
@@ -59,7 +62,8 @@ fun MainScreen(viewModel: MusicViewModel) {
                         onSeekTo = { viewModel.seekTo(it) },
                         onShuffleClick = { viewModel.toggleShuffle() },
                         onRepeatClick = { viewModel.toggleRepeatMode() },
-                        onImageChange = onImageChange // Pass the onImageChange function here
+                        onImageChange = onImageChange,
+                        formatDuration = { milliseconds -> viewModel.formatDuration(milliseconds) }
                     )
                 }
                 BottomNavigationBar(
@@ -80,6 +84,7 @@ fun MainScreen(viewModel: MusicViewModel) {
                         playlist = selectedPlaylist!!,
                         viewModel = viewModel,
                         onBackClick = { selectedPlaylist = null },
+                        onPlaySongClick = onPlaySongClick, // Pass the onPlaySongClick function here
                         onAddSongsClick = {
                             // Open the MusicList for adding songs
                             selectedTab = 0 // Switch to the MusicList tab
@@ -96,20 +101,15 @@ fun MainScreen(viewModel: MusicViewModel) {
                             viewModel.addSongToPlaylist(targetPlaylist, selectedSongs)
                         }
                     )
-                    1 -> Text("Albums")
-                    2 -> Text("Artists")
-                    3 -> PlaylistScreen(
+=                    3 -> PlaylistScreen(
                         viewModel = viewModel,
                         onPlaylistClick = { selectedPlaylist = it },
                         onImageSelected = { playlist, uri ->
-                            // Handle the selected image URI for the playlist
                             viewModel.setPlaylistCover(playlist.id, uri)
                         }
                     )
-                    4 -> Text("Favorites")
                 }
             }
         }
     }
 }
-

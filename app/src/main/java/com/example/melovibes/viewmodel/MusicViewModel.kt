@@ -11,9 +11,11 @@ import android.os.Build
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -27,6 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import androidx.documentfile.provider.DocumentFile
+import com.example.melovibes.repository.PlaylistRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -58,8 +61,16 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
     val playlists: StateFlow<List<Playlist>> get() = _playlists
 
+    private val playlistRepository = PlaylistRepository(application)
+
     private val _isFullScreen = mutableStateOf(false)
     val isFullScreen: State<Boolean> = _isFullScreen
+
+    private val _selectedSongs = MutableStateFlow<List<Song>>(emptyList())
+    val selectedSongs: StateFlow<List<Song>> = _selectedSongs
+
+    private val _isSelectionMode = MutableStateFlow(false)
+    val isSelectionMode: StateFlow<Boolean> = _isSelectionMode
 
 
     private var exoPlayer: ExoPlayer? = null
@@ -75,6 +86,7 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
         setupPlayer()
         createNotificationChannel()
         loadSongs()
+        _playlists.value = playlistRepository.loadPlaylists()
     }
 
     private fun setupPlayer() {
@@ -315,25 +327,30 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
             id = UUID.randomUUID().toString(), // Generate a unique String ID
             name = name
         )
-        _playlists.value = _playlists.value + newPlaylist
+        // Add the new playlist to the current list of playlists
+        val updatedPlaylists = _playlists.value + newPlaylist
+        _playlists.value = updatedPlaylists
+
+        // Save updated playlists to SharedPreferences
+        playlistRepository.savePlaylists(updatedPlaylists)
     }
 
     fun addSongToPlaylist(playlist: Playlist, songs: List<Song>) {
         val updatedPlaylist = playlist.copy(songs = playlist.songs + songs)
-        _playlists.value = _playlists.value.map {
-            if (it.id == playlist.id) updatedPlaylist else it
-        }
-    }
 
-    fun removeSongFromPlaylist(playlist: Playlist, song: Song) {
-        val updatedPlaylist = playlist.copy(songs = playlist.songs - song)
         _playlists.value = _playlists.value.map {
             if (it.id == playlist.id) updatedPlaylist else it
         }
+        playlistRepository.savePlaylists(_playlists.value)
     }
 
     fun removePlaylist(playlist: Playlist) {
-        _playlists.value = _playlists.value.filter { it.id != playlist.id }
+        // Remove the playlist from the list
+        val updatedPlaylists = _playlists.value.filter { it.id != playlist.id }
+        _playlists.value = updatedPlaylists
+
+        // Save the updated list of playlists to SharedPreferences
+        playlistRepository.savePlaylists(updatedPlaylists)
     }
 
     // Function to set a playlist cover
@@ -380,8 +397,11 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun deleteSongs(songs: List<Song>) {
-        _songs.value = _songs.value.filter { it !in songs }
+    fun deleteSongs(songsToDelete: List<Song>) {
+        Log.d("MusicViewModel", "Deleting songs: $songsToDelete")
+        _songs.value = _songs.value - songsToDelete.toSet()
+        _selectedSongs.value = emptyList()
+        _isSelectionMode.value = false
     }
 
     fun setAsRingtone(song: Song?) {
@@ -410,15 +430,41 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun removeSongsFromPlaylist(playlist: Playlist, songsToRemove: List<Song>) {
-        viewModelScope.launch {
-            val updatedSongs = playlist.songs.filterNot { it in songsToRemove }
-            val updatedPlaylist = playlist.copy(songs = updatedSongs)
-            _playlists.value = _playlists.value.map { if (it.id == playlist.id) updatedPlaylist else it }
+        val updatedSongs = playlist.songs.filterNot { song -> songsToRemove.contains(song) }
+        val updatedPlaylist = playlist.copy(songs = updatedSongs)
+
+        _playlists.value = _playlists.value.map {
+            if (it.id == playlist.id) updatedPlaylist else it
         }
+
+        playlistRepository.savePlaylists(_playlists.value)
     }
 
 
+    fun toggleSelection(song: Song) {
+        _selectedSongs.value = if (_selectedSongs.value.contains(song)) {
+            _selectedSongs.value - song
+        } else {
+            _selectedSongs.value + song
+        }
+        _isSelectionMode.value = _selectedSongs.value.isNotEmpty()
+    }
 
+    fun formatDuration(milliseconds: Long): String {
+        val totalSeconds = milliseconds / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format("%02d:%02d", minutes, seconds)
+    }
+
+    fun enableSelectionMode() {
+        _isSelectionMode.value = true
+    }
+
+    fun disableSelectionMode() {
+        _isSelectionMode.value = false
+        _selectedSongs.value = emptyList()
+    }
 
     override fun onCleared() {
         super.onCleared()
