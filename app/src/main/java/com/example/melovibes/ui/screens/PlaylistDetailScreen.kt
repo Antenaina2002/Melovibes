@@ -38,6 +38,8 @@ fun PlaylistDetailScreen(
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var showAddSongsDialog by remember { mutableStateOf(false) }
     var showRemoveSongsDialog by remember { mutableStateOf(false) }
+    var showSongOptionsDialog by remember { mutableStateOf(false) }
+    var selectedSongForOptions by remember { mutableStateOf<Song?>(null) }
     val selectedSongs = remember { mutableStateListOf<Song>() }
     val addDialogSelectedSongs = remember { mutableStateListOf<Song>() }
     val playlists by viewModel.playlists.collectAsState()
@@ -90,7 +92,8 @@ fun PlaylistDetailScreen(
                                 }
                             },
                             onMoreOptionsClick = {
-                                showAddSongsDialog = true
+                                selectedSongForOptions = song
+                                showSongOptionsDialog = true
                             },
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -265,6 +268,37 @@ fun PlaylistDetailScreen(
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmation = false }) {
                     Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Show Song Options Dialog
+    if (showSongOptionsDialog) {
+        AlertDialog(
+            onDismissRequest = { showSongOptionsDialog = false },
+            title = { Text("Song Options") },
+            text = {
+                Column {
+                    Button(onClick = {
+                        showAddSongsDialog = true
+                        showSongOptionsDialog = false
+                    }) {
+                        Text("Add to Playlist")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = {
+                        selectedSongs.add(selectedSongForOptions!!)
+                        showRemoveSongsDialog = true
+                        showSongOptionsDialog = false
+                    }) {
+                        Text("Remove from Playlist")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSongOptionsDialog = false }) {
+                    Text("Close")
                 }
             }
         )
