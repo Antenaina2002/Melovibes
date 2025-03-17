@@ -64,7 +64,8 @@ fun MainScreen(viewModel: MusicViewModel) {
                         onSeekTo = { viewModel.seekTo(it) },
                         onShuffleClick = { viewModel.toggleShuffle() },
                         onRepeatClick = { viewModel.toggleRepeatMode() },
-                        onImageChange = onImageChange // Pass the onImageChange function here
+                        onImageChange = onImageChange,
+                        formatDuration = { milliseconds -> viewModel.formatDuration(milliseconds) }
                     )
                 }
                 BottomNavigationBar(

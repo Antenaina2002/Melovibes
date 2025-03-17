@@ -57,7 +57,8 @@ fun NowPlaying(
     onSeekTo: (Float) -> Unit,
     onShuffleClick: () -> Unit,
     onRepeatClick: () -> Unit,
-    onImageChange: () -> Unit // Added callback for changing album art
+    onImageChange: () -> Unit,
+    formatDuration: (Long) -> String
 ) {
     var isFullScreen by remember { mutableStateOf(false) }
 
@@ -95,8 +96,8 @@ fun NowPlaying(
                         // Song cover or default music note icon
                         Box(
                             modifier = Modifier
-                                .size(48.dp) // Placeholder size
-                                .clip(RoundedCornerShape(12.dp)) // Rounded corners for the placeholder
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
                                 .background(MaterialTheme.colorScheme.surfaceVariant)
                         ) {
                             val painter = rememberAsyncImagePainter(
@@ -109,11 +110,10 @@ fun NowPlaying(
                                 contentDescription = "Album Art",
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .clip(RoundedCornerShape(12.dp)), // Ensure image fits in the rounded box
+                                    .clip(RoundedCornerShape(12.dp)),
                                 contentScale = ContentScale.Crop
                             )
 
-                            // Handle errors and show a fallback music note icon
                             if (imageState is AsyncImagePainter.State.Error) {
                                 Icon(
                                     imageVector = Icons.Filled.MusicNote,
@@ -182,7 +182,7 @@ fun NowPlaying(
                     // Large Album Art or Default Music Note Icon
                     Box(
                         modifier = Modifier
-                            .size(250.dp) // Adjust size of the placeholder
+                            .size(250.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                     ) {
@@ -200,7 +200,6 @@ fun NowPlaying(
                             contentScale = ContentScale.Crop
                         )
 
-                        // Handle errors and show a fallback music note icon
                         if (imageState is AsyncImagePainter.State.Error) {
                             Icon(
                                 imageVector = Icons.Filled.MusicNote,
@@ -212,15 +211,15 @@ fun NowPlaying(
                             )
                         }
 
-                        // IconButton to change album art, placed on top of the image
+                        // IconButton to change album art
                         IconButton(
                             onClick = onImageChange,
                             modifier = Modifier
-                                .align(Alignment.TopEnd) // Positioned at the top-right corner
-                                .padding(8.dp) // Padding to avoid overlap
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.Edit, // Edit icon to change image
+                                imageVector = Icons.Filled.Edit,
                                 contentDescription = "Change Album Art"
                             )
                         }
@@ -255,15 +254,22 @@ fun NowPlaying(
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    // Add the current position and duration here
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(formatDuration(currentPosition), style = MaterialTheme.typography.bodySmall)
-                        Text(formatDuration(duration), style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = formatDuration(currentPosition), // Use the passed formatDuration function
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = formatDuration(duration), // Use the passed formatDuration function
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
 
-                    // Playback controls
+                    // Playback controls (unchanged)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -283,7 +289,6 @@ fun NowPlaying(
                             )
                         }
 
-                        // Other buttons: Previous, Play/Pause, Next, Repeat
                         IconButton(
                             onClick = onPrevious,
                             modifier = Modifier.size(52.dp)
