@@ -1,9 +1,7 @@
 package com.example.melovibes.ui.components
 
-import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.animation.*
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.material3.*
@@ -13,10 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.example.melovibes.model.Song
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
