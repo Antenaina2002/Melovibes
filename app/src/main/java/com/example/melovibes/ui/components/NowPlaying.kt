@@ -58,7 +58,7 @@ fun NowPlaying(
     onShuffleClick: () -> Unit,
     onRepeatClick: () -> Unit,
     formatDuration: (Long) -> String,
-    onImageChange: () -> Unit // Added callback for changing album art
+    onImageChange: () -> Unit
 ) {
     var isFullScreen by remember { mutableStateOf(false) }
 
@@ -68,10 +68,9 @@ fun NowPlaying(
 
     Surface(
         tonalElevation = 8.dp,
-        shape = if (isFullScreen) RoundedCornerShape(0.dp) else RoundedCornerShape(24.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(height = animateDpAsState(if (isFullScreen) 550.dp else 72.dp).value)
+            .height(height = animateDpAsState(if (isFullScreen) 770.dp else 72.dp).value)
             .clickable { toggleSize() }
             .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
@@ -82,7 +81,6 @@ fun NowPlaying(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Mini player
             AnimatedVisibility(visible = !isFullScreen) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -93,7 +91,6 @@ fun NowPlaying(
                         modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Song cover or default music note icon
                         Box(
                             modifier = Modifier
                                 .size(48.dp)
@@ -127,7 +124,9 @@ fun NowPlaying(
                         }
 
                         Column(
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 15.dp)
                         ) {
                             MarqueeText(
                                 text = song.title,
@@ -143,7 +142,6 @@ fun NowPlaying(
                         }
                     }
 
-                    // Add Previous Button
                     IconButton(onClick = onPrevious) {
                         Icon(
                             imageVector = Icons.Filled.SkipPrevious,
@@ -151,7 +149,6 @@ fun NowPlaying(
                         )
                     }
 
-                    // Play/Pause Button
                     IconButton(onClick = { onPlayPause() }) {
                         Icon(
                             imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,

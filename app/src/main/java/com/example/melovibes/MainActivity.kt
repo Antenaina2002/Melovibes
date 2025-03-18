@@ -17,22 +17,19 @@ import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.example.melovibes.ui.screens.MainScreen
+import com.example.melovibes.ui.theme.MusicPlayerTheme
 import com.example.melovibes.viewmodel.MusicViewModel
-import com.example.musicplayer.ui.theme.MusicPlayerTheme
 
 class MainActivity : ComponentActivity() {
     private val viewModel: MusicViewModel by viewModels()
 
-    // Permission launcher for requesting runtime permissions
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val allPermissionsGranted = permissions.values.all { it }
         if (allPermissionsGranted) {
-            // All permissions granted, proceed with your logic
             Log.d("MainActivity", "All permissions granted")
         } else {
-            // Some permissions denied, show a message or disable functionality
             Log.d("MainActivity", "Some permissions denied")
         }
     }
@@ -41,7 +38,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Check and request permissions
         checkAndRequestPermissions()
 
         setContent {
@@ -57,26 +53,20 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun checkAndRequestPermissions() {
-        // Define the permissions to request based on the Android version
         val permissions = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // For Android 13 (API level 33) and above, request READ_MEDIA_AUDIO
             permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
         } else {
-            // For older versions, request READ_EXTERNAL_STORAGE
             permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
 
-        // Check if permissions are already granted
         val permissionsToRequest = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != android.content.pm.PackageManager.PERMISSION_GRANTED
         }.toTypedArray()
 
-        // Request permissions if not already granted
         if (permissionsToRequest.isNotEmpty()) {
             permissionLauncher.launch(permissionsToRequest)
         } else {
-            // All permissions already granted, proceed with your logic
             Log.d("MainActivity", "All permissions already granted")
         }
 

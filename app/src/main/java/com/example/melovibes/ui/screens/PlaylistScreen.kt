@@ -3,6 +3,7 @@ package com.example.musicplayer.ui.screens
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -125,8 +126,10 @@ fun PlaylistScreen(
                 TextButton(onClick = { showNewPlaylistDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            shape = MaterialTheme.shapes.medium // Optional, adds rounded corners
         )
+
     }
 
     // Image Picker Dialog

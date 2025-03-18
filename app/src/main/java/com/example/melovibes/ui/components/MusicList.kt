@@ -1,6 +1,6 @@
 package com.example.melovibes.ui.components
 
-import androidx.compose.foundation.clickable
+import SongItem
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
@@ -16,12 +16,8 @@ import com.example.melovibes.model.Playlist
 import com.example.melovibes.model.Song
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -45,18 +41,15 @@ fun MusicList(
     var selectedSongForOptions by remember { mutableStateOf<Song?>(null) }
     var selectedPlaylistForAdd by remember { mutableStateOf<Playlist?>(null) }
 
-    // Toggle the selection of a song
     fun onToggleSelection(song: Song) {
         if (selectedSongs.contains(song)) {
             selectedSongs.remove(song)
-            
-            // Disable selection mode if no songs are selected
+
             if (selectedSongs.isEmpty()) {
                 viewModel.disableSelectionMode()
             }
         } else {
             selectedSongs.add(song)
-            // Enable selection mode if at least one song is selected
             if (!isSelectionMode) {
                 viewModel.enableSelectionMode()
             }
@@ -87,13 +80,13 @@ fun MusicList(
                     },
                     onLongPress = {
                         if (!isSelectionMode) {
-                            viewModel.enableSelectionMode() // Switch to selection mode on long press
+                            viewModel.enableSelectionMode()
                         }
                         onToggleSelection(song)
                     },
                     onToggleSelection = { onToggleSelection(song) },
                     onMoreOptionsClick = {
-                        selectedSongForOptions = song // Set the song for options menu
+                        selectedSongForOptions = song
                         showOptionsDialog = true
                     }
                 )
@@ -102,7 +95,6 @@ fun MusicList(
         }
     }
 
-    // Show the overlay button when multiple songs are selected
     if (showOverlayButton) {
         Box(
             modifier = Modifier
@@ -111,7 +103,7 @@ fun MusicList(
             contentAlignment = Alignment.BottomEnd
         ) {
             FloatingActionButton(
-                onClick = { showOptionsDialog = true }, // Show options dialog for multiple songs
+                onClick = { showOptionsDialog = true },
                 modifier = Modifier.size(56.dp)
             ) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Options") // Three dots icon
@@ -119,7 +111,6 @@ fun MusicList(
         }
     }
 
-    // Show the options dialog when the button is clicked (for single song or multiple songs)
     if (showOptionsDialog) {
         Dialog(onDismissRequest = { showOptionsDialog = false }) {
             Surface(
@@ -139,16 +130,15 @@ fun MusicList(
                     Button(
                         onClick = {
                             showOptionsDialog = false
-                            // If a single song is selected, add it to the selectedSongs list
                             if (selectedSongForOptions != null) {
-                                selectedSongs.clear() // Clear any previous selections
+                                selectedSongs.clear()
                                 selectedSongs.add(selectedSongForOptions!!)
                             }
                             showAddToPlaylistDialog = true
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Add to Playlist")
+                        Text("Add to Playlist",color = MaterialTheme.colorScheme.inverseOnSurface)
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -156,48 +146,32 @@ fun MusicList(
                     Button(
                         onClick = {
                             showOptionsDialog = false
-                            // Delete selected song or songs
                             if (selectedSongForOptions != null) {
                                 viewModel.deleteSongs(listOf(selectedSongForOptions!!))
                             } else {
                                 viewModel.deleteSongs(selectedSongs)
                             }
-                            selectedSongs.clear() // Clear selection after deletion
+                            selectedSongs.clear()
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(Color.Red)
                     ) {
-                        Text("Delete Song(s)")
+                        Text("Delete Song(s)",color = MaterialTheme.colorScheme.inverseOnSurface)
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    if (selectedSongForOptions != null) {
-                        Button(
-                            onClick = {
-                                showOptionsDialog = false
-                                viewModel.setAsRingtone(selectedSongForOptions!!)
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Set as Ringtone")
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
+                    if (selectedSongForOptions != null)
                     Button(
                         onClick = { showOptionsDialog = false },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Cancel")
+                        Text("Cancel",color = MaterialTheme.colorScheme.inverseOnSurface)
                     }
                 }
             }
         }
     }
 
-    // Show the dialog to add songs to a playlist (for multiple selections)
     if (showAddToPlaylistDialog) {
         Dialog(onDismissRequest = { showAddToPlaylistDialog = false }) {
             Surface(

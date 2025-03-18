@@ -1,4 +1,4 @@
-package com.example.musicplayer.ui.theme
+package com.example.melovibes.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -12,9 +12,9 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Blue80,
-    secondary = BlueGrey80,
-    tertiary = Grey80
+    primary = BlueGrey80,
+    secondary = Grey80,
+    tertiary = Blue80
 )
 
 private val LightColorScheme = lightColorScheme(

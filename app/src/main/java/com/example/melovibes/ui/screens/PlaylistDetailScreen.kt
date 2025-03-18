@@ -1,5 +1,6 @@
 package com.example.musicplayer.ui.screens
 
+import SongItem
 import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.layout.*
@@ -23,8 +24,6 @@ import androidx.compose.ui.window.Dialog
 import com.example.melovibes.model.Playlist
 import com.example.melovibes.model.Song
 import com.example.melovibes.viewmodel.MusicViewModel
-import com.example.melovibes.ui.components.MusicList
-import com.example.melovibes.ui.components.SongItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
